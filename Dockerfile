@@ -31,4 +31,6 @@ WORKDIR /app/
 
 ENV DOCKER_HOST unix:///tmp/docker.sock
 
+EXPOSE 80
+
 VOLUME ["/etc/nginx/certs"]
