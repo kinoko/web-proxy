@@ -1,6 +1,6 @@
 
 GOPATH := $(realpath ${PWD}/../../)
-GOOS := darwin
+GOOS := linux
 GOARCH := amd64
 
 export GOPATH

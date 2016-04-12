@@ -35,7 +35,7 @@ func NewDispatcher() *Dispatcher {
 }
 
 func (d *Dispatcher) init() error {
-	if d.Client == nil {
+	if d.Client != nil {
 		return nil
 	}
 	var err error
@@ -81,9 +81,9 @@ func (d *Dispatcher) Start() error {
 				log.Fatalf("Fail dispatch: %v", err)
 			}
 		case <-time.After(10 * time.Second):
-			if err := g.Client.Ping(); err != nil {
+			if err := d.Client.Ping(); err != nil {
 				log.Printf("Unable to ping docker daemon: %s", err)
-				d.flushListen()
+				d.flushListen(eventChan)
 			}
 		case sig := <-sigChan:
 			log.Printf("Received signal: %s\n", sig)
@@ -115,7 +115,7 @@ func (d *Dispatcher) flushListen(listener chan *docker.APIEvents) error {
 	if !d.watch {
 		return nil
 	}
-	client.RemoveEventListener(listener)
+	d.Client.RemoveEventListener(listener)
 	d.watch = false
 	d.Client = nil
 	return nil
@@ -132,7 +132,12 @@ func (d *Dispatcher) dispatch(event *docker.APIEvents) error {
 
 func (d *Dispatcher) update() error {
 	log.Printf("Updating...")
-	return nil
+	config, err := configFromContainers(d.Client)
+	if err != nil {
+		return err
+	}
+	err = config.Generate()
+	return err
 }
 
 func newSignalChannel() <-chan os.Signal {
