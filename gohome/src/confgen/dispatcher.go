@@ -6,6 +6,7 @@ import (
 	"time"
 	"os"
 	"os/signal"
+  "os/exec"
 	"syscall"
 	
   docker "github.com/fsouza/go-dockerclient"
@@ -137,7 +138,14 @@ func (d *Dispatcher) update() error {
 		return err
 	}
 	err = config.Generate()
-	return err
+  if err == nil {
+    return err
+  }
+  err = exec.Command("nginx",  "-s", "reload").Run()
+  if err != nil {
+    log.Printf("Failed to reload nginx: %v", err)
+  }
+	return nil
 }
 
 func newSignalChannel() <-chan os.Signal {
