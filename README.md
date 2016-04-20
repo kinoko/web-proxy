@@ -1,4 +1,3 @@
-
 nginx-proxy sets up a container running nginx and docker-gen. docker-gen generate reverse proxy configs for nginx and reloads nginx when containers are started and stopped. requests accessed to this container is distributed by the url location. this is inpired by jwilder/nginx-proxy.
 
 # Usage
@@ -11,6 +10,7 @@ Then start any containers you want proxied with env vars `WEB_VIRTUAL_HOST=examp
 ```
 $ docker run -e WEB_HOST="example.com" -e WEB_LOCATION="/subloc" --name test-web-page ...
 ```
+This case the proxied container can be accessed with `http://example.com/subloc`.
 
 ## HTTPS Certification
 If you want proxied with https connection, you need to put `*.crt` and `*.key` files on the directry `/etc/nginx/certs`. The certification files are named by domain as `example.com.crt` or `example.com.key`. 
