@@ -2,23 +2,23 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"log"
-	"sort"
 	"io/ioutil"
+	"log"
+	"os"
 	"path/filepath"
+	"sort"
 )
 
 type Location struct {
-	Name string
-	Prefix string
+	Name    string
+	Prefix  string
 	Address string
 }
 
 type Locations []*Location
 
 type VirtualHost struct {
-	Name string
+	Name      string
 	Locations Locations
 }
 type Config struct {
@@ -147,7 +147,7 @@ server {
 `, loc.Prefix, loc.Name)
 			if Exists(basic) {
 				fmt.Fprintf(dest, `    auth_basic "Restricted %s";\n`, vhost.Name)
-				fmt.Fprintf(dest, `    auth_basic_user_file %s;\n`, basic) 
+				fmt.Fprintf(dest, `    auth_basic_user_file %s;\n`, basic)
 			}
 			fmt.Fprintln(dest, "  }")
 		}

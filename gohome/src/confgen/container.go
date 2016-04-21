@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 	"strings"
-	
+
 	docker "github.com/fsouza/go-dockerclient"
 )
 
@@ -21,7 +21,7 @@ func splitKeyValueSlice(in []string) map[string]string {
 
 func configFromContainers(client *docker.Client) (*Config, error) {
 	containers, err := client.ListContainers(docker.ListContainersOptions{
-		All: false,
+		All:  false,
 		Size: false,
 	})
 	if err != nil {
@@ -50,8 +50,8 @@ func configFromContainers(client *docker.Client) (*Config, error) {
 			config.Hosts[hostname] = vhost
 		}
 		loc := &Location{
-			Name: strings.TrimLeft(inspect.Name, "/"),
-			Prefix: location,
+			Name:    strings.TrimLeft(inspect.Name, "/"),
+			Prefix:  location,
 			Address: inspect.NetworkSettings.IPAddress,
 		}
 		vhost.Locations = append(vhost.Locations, loc)

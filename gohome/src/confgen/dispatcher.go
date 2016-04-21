@@ -3,17 +3,17 @@ package main
 import (
 	"fmt"
 	"log"
-	"time"
 	"os"
+	"os/exec"
 	"os/signal"
-  "os/exec"
 	"syscall"
-	
-  docker "github.com/fsouza/go-dockerclient"
+	"time"
+
+	docker "github.com/fsouza/go-dockerclient"
 )
 
 type DispatchError struct {
-	Inner error
+	Inner   error
 	Message string
 }
 
@@ -22,16 +22,16 @@ func (e DispatchError) Error() string {
 }
 
 type Dispatcher struct {
-  Client *docker.Client
-	watch bool
-	retry bool
+	Client *docker.Client
+	watch  bool
+	retry  bool
 }
 
 func NewDispatcher() *Dispatcher {
 	return &Dispatcher{
 		Client: nil,
-		watch: false,
-		retry: false,
+		watch:  false,
+		retry:  false,
 	}
 }
 
@@ -102,7 +102,7 @@ func (d *Dispatcher) listen(listener chan *docker.APIEvents) error {
 	}
 	if err := d.Client.AddEventListener(listener); err != nil && err != docker.ErrListenerAlreadyExists {
 		return DispatchError{
-			Inner: err,
+			Inner:   err,
 			Message: "Error registring docker event listener",
 		}
 	}
@@ -138,13 +138,13 @@ func (d *Dispatcher) update() error {
 		return err
 	}
 	err = config.Generate()
-  if err == nil {
-    return err
-  }
-  err = exec.Command("nginx",  "-s", "reload").Run()
-  if err != nil {
-    log.Printf("Failed to reload nginx: %v", err)
-  }
+	if err == nil {
+		return err
+	}
+	err = exec.Command("nginx", "-s", "reload").Run()
+	if err != nil {
+		log.Printf("Failed to reload nginx: %v", err)
+	}
 	return nil
 }
 
