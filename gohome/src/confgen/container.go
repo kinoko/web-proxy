@@ -27,9 +27,7 @@ func configFromContainers(client *docker.Client) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	config := &Config{
-		Hosts: make(map[string]*VirtualHost),
-	}
+	config := NewConfig()
 	for _, container := range containers {
 		inspect, err := client.InspectContainer(container.ID)
 		if err != nil {
@@ -46,20 +44,13 @@ func configFromContainers(client *docker.Client) (*Config, error) {
 		if !okPort {
 			port = "80"
 		}
-		vhost, ok := config.Hosts[hostname]
-		if !ok {
-			vhost = &VirtualHost{
-				Name: hostname,
-			}
-			config.Hosts[hostname] = vhost
-		}
-		loc := &Location{
+		vhost := config.Hosts.GetOrInit(hostname)
+		vhost.AddLocation(&Location{
 			Name:    strings.TrimLeft(inspect.Name, "/"),
 			Prefix:  location,
 			Port:    port,
 			Address: inspect.NetworkSettings.IPAddress,
-		}
-		vhost.Locations = append(vhost.Locations, loc)
+		})
 	}
 	config.Sort()
 	return config, nil
