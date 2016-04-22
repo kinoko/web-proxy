@@ -12,6 +12,7 @@ import (
 	docker "github.com/fsouza/go-dockerclient"
 )
 
+// DispatchError : error holder
 type DispatchError struct {
 	Inner   error
 	Message string
@@ -21,12 +22,14 @@ func (e DispatchError) Error() string {
 	return fmt.Sprintf("%s: %v", e.Message, e.Inner)
 }
 
+// Dispatcher : dispatcher
 type Dispatcher struct {
 	Client *docker.Client
 	watch  bool
 	retry  bool
 }
 
+// NewDispatcher : create a new dispatcher
 func NewDispatcher() *Dispatcher {
 	return &Dispatcher{
 		Client: nil,
@@ -50,6 +53,7 @@ func (d *Dispatcher) init() error {
 	return nil
 }
 
+// Start : start this dispatcher
 func (d *Dispatcher) Start() error {
 	eventChan := make(chan *docker.APIEvents, 100)
 	sigChan := newSignalChannel()

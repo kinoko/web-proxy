@@ -9,6 +9,7 @@ import (
 	"sort"
 )
 
+// Location : location
 type Location struct {
 	Name    string
 	Prefix  string
@@ -16,24 +17,58 @@ type Location struct {
 	Address string
 }
 
+// Locations : list of locations
 type Locations []*Location
 
+// VirtualHost : virtual host
 type VirtualHost struct {
 	Name      string
 	Locations Locations
 }
+
+// VirtualHosts : map of virtual hosts
+type VirtualHosts map[string]*VirtualHost
+
+// Config : config
 type Config struct {
-	Hosts map[string]*VirtualHost
+	Hosts VirtualHosts
 }
 
+// NewConfig : create a new config
+func NewConfig() *Config {
+	return Config{
+		Hosts: make(VirtualHosts),
+	}
+}
+
+// Sort : sort
 func (c *Config) Sort() {
 	for _, host := range c.Hosts {
 		host.Sort()
 	}
 }
 
+// Sort : sort
 func (v *VirtualHost) Sort() {
 	sort.Sort(v.Locations)
+}
+
+// AddLocation : add a location
+func (v *VirtualHost) AddLocation(loc *Location) {
+	v.Locations = append(v.Locations, loc)
+}
+
+// GetOrInit : get a virtual host with hostname.
+func (vs *VirtualHosts) GetOrInit(hostname string) *VirtualHost {
+	if vhost, ok := vs[hostname]; ok {
+		return vhost
+	}
+	vhost := &VirtualHost{
+		Name:      hostname,
+		Locations: make(Locations),
+	}
+	vs[hostname] = vhost
+	return vhost
 }
 
 func (ls Locations) Len() int {
@@ -49,6 +84,7 @@ func (ls Locations) Swap(i, j int) {
 	return
 }
 
+// Generate : to generate config file
 func (c *Config) Generate() error {
 	env = GetEnv()
 	dest, err := ioutil.TempFile(filepath.Dir(env.Dest), "web-proxy")
@@ -156,6 +192,7 @@ server {
 	}
 }
 
+// Exists : check the existance of a file
 func Exists(filename string) bool {
 	_, err := os.Stat(filename)
 	return err == nil
