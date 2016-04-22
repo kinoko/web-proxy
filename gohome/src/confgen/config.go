@@ -12,6 +12,7 @@ import (
 type Location struct {
 	Name    string
 	Prefix  string
+	Port    string
 	Address string
 }
 
@@ -105,7 +106,7 @@ server {
 	for _, vhost := range c.Hosts {
 		fmt.Fprintf(dest, "upstream %s {\n", vhost.Name)
 		for _, loc := range vhost.Locations {
-			fmt.Fprintf(dest, "  # %s\n  server %s;\n", loc.Name, loc.Address)
+			fmt.Fprintf(dest, "  # %s\n  server %s:%s;\n", loc.Name, loc.Address, loc.Port)
 		}
 		fmt.Fprintln(dest, "}")
 	}

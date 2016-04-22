@@ -39,8 +39,12 @@ func configFromContainers(client *docker.Client) (*Config, error) {
 		env := splitKeyValueSlice(inspect.Config.Env)
 		hostname, okHost := env["WEB_VIRTUAL_HOST"]
 		location, okLoc := env["WEB_LOCATION"]
+		port, okPort := env["WEB_PORT"]
 		if !okHost || !okLoc {
 			continue
+		}
+		if !okPort {
+			port = "80"
 		}
 		vhost, ok := config.Hosts[hostname]
 		if !ok {
@@ -52,6 +56,7 @@ func configFromContainers(client *docker.Client) (*Config, error) {
 		loc := &Location{
 			Name:    strings.TrimLeft(inspect.Name, "/"),
 			Prefix:  location,
+			Port:    port,
 			Address: inspect.NetworkSettings.IPAddress,
 		}
 		vhost.Locations = append(vhost.Locations, loc)
