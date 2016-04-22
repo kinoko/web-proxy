@@ -1,0 +1,24 @@
+hash: 0713f26f042d01934725fa3964caa37ead8e9364f5f9cd43072ac4c7cf78cf8b
+updated: 2016-03-07T16:09:34.581835351+09:00
+imports:
+- name: github.com/fsouza/go-dockerclient
+  version: ddbe4ddacd876fa8f9202e656c1972124c4a665d
+  subpackages:
+  - external/github.com/docker/docker/opts
+  - external/github.com/docker/docker/pkg/archive
+  - external/github.com/docker/docker/pkg/fileutils
+  - external/github.com/docker/docker/pkg/homedir
+  - external/github.com/docker/docker/pkg/stdcopy
+  - external/github.com/hashicorp/go-cleanhttp
+  - external/github.com/Sirupsen/logrus
+  - external/github.com/docker/docker/pkg/idtools
+  - external/github.com/docker/docker/pkg/ioutils
+  - external/github.com/docker/docker/pkg/pools
+  - external/github.com/docker/docker/pkg/promise
+  - external/github.com/docker/docker/pkg/system
+  - external/github.com/docker/docker/pkg/longpath
+  - external/github.com/opencontainers/runc/libcontainer/user
+  - external/golang.org/x/sys/unix
+  - external/golang.org/x/net/context
+  - external/github.com/docker/go-units
+devImports: []
