@@ -12,3 +12,4 @@
     state: reloaded
     restart_policy: always
     docker_api_version: "{{ docker_api_version }}"
+    insecure_registry: {{ docker_insecure_registry }}
