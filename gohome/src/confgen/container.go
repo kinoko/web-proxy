@@ -13,7 +13,7 @@ type envVariables struct {
 }
 
 func extractEnv(in []string) *envVariables {
-	return &EnvVariables{
+	return &envVariables{
 		Env: splitKeyValueSlice(in),
 		Ok:  true,
 	}
@@ -32,15 +32,15 @@ func splitKeyValueSlice(in []string) map[string]string {
 }
 
 func (env *envVariables) Require(name string) string {
-	if val, ok = env.Env[name]; ok {
+	if val, ok := env.Env[name]; ok {
 		return val
 	}
 	env.Ok = false
-	return nil
+	return ""
 }
 
-func (env *envVariables) Optional(name string, string def) string {
-	if val, ok = env.Env[name]; ok {
+func (env *envVariables) Optional(name string, def string) string {
+	if val, ok := env.Env[name]; ok {
 		return val
 	}
 	return def

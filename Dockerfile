@@ -4,7 +4,7 @@ MAINTAINER Kazuto Fukuchi <kazuto@mdl.cs.tsukuba.ac.jp>
 
 RUN \
   apt-get update && \
-  apt-get install -y -q --no-install-recommends ca-certificates wget && \
+  apt-get install -y -q --no-install-recommends ca-certificates && \
   apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN \
