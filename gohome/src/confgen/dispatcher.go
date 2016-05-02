@@ -45,6 +45,7 @@ func (d *Dispatcher) init() error {
 	if err != nil {
 		return err
 	}
+	log.Printf("New docker client at %s", d.Client.Endpoint())
 	d.watch = false
 	d.update()
 	return nil

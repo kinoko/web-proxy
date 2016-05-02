@@ -67,4 +67,5 @@ server {
 {{end}}
   }
 {{end}}
+}
 {{end}}

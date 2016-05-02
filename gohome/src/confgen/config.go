@@ -81,7 +81,7 @@ func (vs VirtualHosts) GetOrInit(hostname string) *VirtualHost {
 	}
 	vhost := &VirtualHost{
 		Name:      hostname,
-		Locations: make(Locations, 5),
+		Locations: make(Locations, 0),
 	}
 	vs[hostname] = vhost
 	return vhost
