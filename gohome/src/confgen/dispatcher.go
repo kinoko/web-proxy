@@ -26,7 +26,6 @@ func (e DispatchError) Error() string {
 type Dispatcher struct {
 	Client *docker.Client
 	watch  bool
-	retry  bool
 }
 
 // NewDispatcher : create a new dispatcher
@@ -34,7 +33,6 @@ func NewDispatcher() *Dispatcher {
 	return &Dispatcher{
 		Client: nil,
 		watch:  false,
-		retry:  false,
 	}
 }
 
@@ -48,7 +46,6 @@ func (d *Dispatcher) init() error {
 		return err
 	}
 	d.watch = false
-	d.retry = false
 	d.update()
 	return nil
 }
