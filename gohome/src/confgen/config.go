@@ -91,7 +91,7 @@ func (ls Locations) Len() int {
 	return len(ls)
 }
 func (ls Locations) Less(i, j int) bool {
-	return ls[i].Prefix < ls[j].Prefix
+	return ls[i].Prefix > ls[j].Prefix
 }
 func (ls Locations) Swap(i, j int) {
 	t := ls[i]

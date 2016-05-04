@@ -140,7 +140,7 @@ func (d *Dispatcher) update() error {
 		return err
 	}
 	err = config.Generate()
-	if err == nil {
+	if err != nil {
 		return err
 	}
 	err = exec.Command("nginx", "-s", "reload").Run()

@@ -1,6 +1,6 @@
 FROM nginx
 
-MAINTAINER Kazuto Fukuchi <kazuto@mdl.cs.tsukuba.ac.jp>
+MAINTAINER Kazuto Fukuchi
 
 RUN \
   apt-get update && \
@@ -15,7 +15,6 @@ ADD https://github.com/jwilder/forego/releases/download/v0.16.1/forego /usr/loca
 RUN chmod u+x /usr/local/bin/forego
 
 COPY gohome/src/confgen/confgen /usr/local/bin/confgen
-
 RUN chmod u+x /usr/local/bin/confgen
 
 COPY app /app
