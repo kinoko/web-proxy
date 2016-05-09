@@ -10,8 +10,11 @@ export GOARCH
 default: build
 
 
-build:
+build: glide
 	go build -v confgen
 
 clean:
 	go clean
+
+glide:
+	glide install

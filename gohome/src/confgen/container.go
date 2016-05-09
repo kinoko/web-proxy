@@ -7,6 +7,18 @@ import (
 	docker "github.com/fsouza/go-dockerclient"
 )
 
+type envVariables struct {
+	Env map[string]string
+	Ok  bool
+}
+
+func extractEnv(in []string) *envVariables {
+	return &envVariables{
+		Env: splitKeyValueSlice(in),
+		Ok:  true,
+	}
+}
+
 func splitKeyValueSlice(in []string) map[string]string {
 	env := make(map[string]string)
 	for _, entry := range in {
@@ -19,6 +31,21 @@ func splitKeyValueSlice(in []string) map[string]string {
 	return env
 }
 
+func (env *envVariables) Require(name string) string {
+	if val, ok := env.Env[name]; ok {
+		return val
+	}
+	env.Ok = false
+	return ""
+}
+
+func (env *envVariables) Optional(name string, def string) string {
+	if val, ok := env.Env[name]; ok {
+		return val
+	}
+	return def
+}
+
 func configFromContainers(client *docker.Client) (*Config, error) {
 	containers, err := client.ListContainers(docker.ListContainersOptions{
 		All:  false,
@@ -27,39 +54,27 @@ func configFromContainers(client *docker.Client) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	config := &Config{
-		Hosts: make(map[string]*VirtualHost),
-	}
+	config := NewConfig()
 	for _, container := range containers {
 		inspect, err := client.InspectContainer(container.ID)
 		if err != nil {
 			log.Printf("error inspecting container: %s: %s\n", container.ID, err)
 			continue
 		}
-		env := splitKeyValueSlice(inspect.Config.Env)
-		hostname, okHost := env["WEB_VIRTUAL_HOST"]
-		location, okLoc := env["WEB_LOCATION"]
-		port, okPort := env["WEB_PORT"]
-		if !okHost || !okLoc {
+		env := extractEnv(inspect.Config.Env)
+		hostname := env.Require("WEB_HOST")
+		location := env.Require("WEB_LOCATION")
+		port := env.Optional("WEB_PORT", "80")
+		if !env.Ok {
 			continue
 		}
-		if !okPort {
-			port = "80"
-		}
-		vhost, ok := config.Hosts[hostname]
-		if !ok {
-			vhost = &VirtualHost{
-				Name: hostname,
-			}
-			config.Hosts[hostname] = vhost
-		}
-		loc := &Location{
+		vhost := config.Hosts.GetOrInit(hostname)
+		vhost.AddLocation(&Location{
 			Name:    strings.TrimLeft(inspect.Name, "/"),
 			Prefix:  location,
 			Port:    port,
 			Address: inspect.NetworkSettings.IPAddress,
-		}
-		vhost.Locations = append(vhost.Locations, loc)
+		})
 	}
 	config.Sort()
 	return config, nil

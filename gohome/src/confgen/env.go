@@ -5,6 +5,7 @@ import (
 	"sync"
 )
 
+// Env : configuration from environment variables
 type Env struct {
 	Dest string
 }
@@ -12,6 +13,7 @@ type Env struct {
 var env *Env
 var once sync.Once
 
+// GetEnv : get env instance. create if not initialized
 func GetEnv() *Env {
 	once.Do(func() {
 		env = newEnv()
@@ -29,7 +31,6 @@ func getDefault(key string, def string) string {
 	v := os.Getenv(key)
 	if v != "" {
 		return v
-	} else {
-		return def
 	}
+	return def
 }
