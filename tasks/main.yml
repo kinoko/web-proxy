@@ -1,0 +1,16 @@
+---
+- name: ensure web proxy container is running
+  become: yes
+  docker:
+    image: "{{ docker_registry_url }}/kinoko/web_proxy"
+    name: web_proxy
+    volumes:
+      - "{{ docker_sock_path }}:/tmp/docker.sock:rw"
+    ports:
+      - 80:80
+      - 443:443
+    state: reloaded
+    pull: {{ web_proxy_pull }}
+    restart_policy: always
+    docker_api_version: "{{ docker_api_version }}"
+    insecure_registry: {{ docker_insecure_registry }}
