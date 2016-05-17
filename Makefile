@@ -12,4 +12,4 @@ clean-confgen:
 	pushd gohome/src/confgen/; make clean; popd
 
 image:
-	docker build --rm -t ci.mdl.cs.tsukuba.ac.jp/kinoko/web-proxy .
+	docker build --rm -t kinoko/web-proxy .
