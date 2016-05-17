@@ -4,18 +4,18 @@ default: all
 all: confgen
 
 get-deps:
-	pushd gohome/src/confgen/; make get-deps; popd
+	cd gohome/src/confgen/; make get-deps; cd ../../../
 
 confgen:
-	pushd gohome/src/confgen/; make; popd
+	cd gohome/src/confgen/; make; cd ../../../
 
 test:
-	pushd gohome/src/confgen/; make test; popd
+	cd gohome/src/confgen/; make test; cd ../../../
 
 clean: clean-confgen
 
 clean-confgen:
-	pushd gohome/src/confgen/; make clean; popd
+	cd gohome/src/confgen/; make clean; cd ../../../
 
 image:
 	docker build --rm -t kinoko/web-proxy .
