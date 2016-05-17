@@ -1,4 +1,4 @@
-nginx-proxy sets up a container running nginx and docker-gen. docker-gen generate reverse proxy configs for nginx and reloads nginx when containers are started and stopped. requests accessed to this container is distributed by the url location. this is inpired by jwilder/nginx-proxy.
+web-proxy sets up a container running nginx, and generate reverse proxy configs for nginx and reloads nginx when containers are started and stopped. requests accessed to this container is distributed by the url location. this is inpired by jwilder/nginx-proxy.
 
 # Usage
 
