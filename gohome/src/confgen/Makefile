@@ -10,11 +10,14 @@ export GOARCH
 default: build
 
 
-build: glide
+build: 
 	go build -v confgen
 
 clean:
 	go clean
 
-glide:
+get-deps:
 	glide install
+
+test:
+	go test $(glide novendor)

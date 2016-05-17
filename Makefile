@@ -3,8 +3,14 @@ default: all
 
 all: confgen
 
+get-deps:
+	pushd gohome/src/confgen/; make get-deps; popd
+
 confgen:
 	pushd gohome/src/confgen/; make; popd
+
+test:
+	pushd gohome/src/confgen/; make test; popd
 
 clean: clean-confgen
 

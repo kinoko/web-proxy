@@ -1,0 +1,18 @@
+language: go
+go:
+  - '1.5'
+sudo: required
+services:
+  - docker
+before_script:
+  - docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+install:
+  - go get github.com/Masterminds/glide
+  - go install github.com/Masterminds/glide
+  - make get-deps
+script:
+  - make
+  - make test
+  - make image
+after_success:
+  - docker push kinoko/web-proxy
