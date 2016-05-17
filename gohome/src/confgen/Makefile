@@ -2,10 +2,12 @@
 GOPATH := $(realpath ${PWD}/../../)
 GOOS := linux
 GOARCH := amd64
+GO15VENDOREXPERIMENT := 1
 
 export GOPATH
 export GOOS
 export GOARCH
+export GO15VENDOREXPERIMENT
 
 default: build
 
