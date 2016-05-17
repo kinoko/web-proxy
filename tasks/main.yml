@@ -2,7 +2,7 @@
 - name: ensure web proxy container is running
   become: yes
   docker:
-    image: "kinoko/web_proxy"
+    image: "kinoko/web-proxy"
     name: web_proxy
     volumes:
       - "{{ docker_sock_path }}:/tmp/docker.sock:rw"
