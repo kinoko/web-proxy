@@ -1,5 +1,7 @@
 web-proxy sets up a container running nginx, and generate reverse proxy configs for nginx and reloads nginx when containers are started and stopped. requests accessed to this container is distributed by the url location. this is inpired by jwilder/nginx-proxy.
 
+[![Build Status](https://travis-ci.org/kinoko/web-proxy.svg?branch=master)](https://travis-ci.org/kinoko/web-proxy)
+
 # Usage
 
 To run it:
