@@ -62,19 +62,25 @@ func configFromContainers(client *docker.Client) (*Config, error) {
 			continue
 		}
 		env := extractEnv(inspect.Config.Env)
-		hostname := env.Require("WEB_HOST")
+		hostnames := env.Require("WEB_HOST")
 		location := env.Require("WEB_LOCATION")
 		port := env.Optional("WEB_PORT", "80")
 		if !env.Ok {
 			continue
 		}
-		vhost := config.Hosts.GetOrInit(hostname)
-		vhost.AddLocation(&Location{
+		container := &Container{
 			Name:    strings.TrimLeft(inspect.Name, "/"),
-			Prefix:  location,
 			Port:    port,
 			Address: inspect.NetworkSettings.IPAddress,
-		})
+		}
+		config.AddContainer(container)
+		for hostname := range strings.Split(hostnames, ";") {
+			vhost := config.Hosts.GetOrInit(hostname)
+			vhost.AddLocation(&Location{
+				Container: container,
+				Prefix:    location,
+			})
+		}
 	}
 	config.Sort()
 	return config, nil

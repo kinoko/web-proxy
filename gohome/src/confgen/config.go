@@ -10,12 +10,20 @@ import (
 	"sort"
 )
 
+// Container : container
+type Container struct {
+	Name    string
+	Address string
+	Port    string
+}
+
+// Containers : list of containers
+type Containers []*Container
+
 // Location : location
 type Location struct {
-	Name    string
-	Prefix  string
-	Port    string
-	Address string
+	Container Container
+	Prefix    string
 }
 
 // Locations : list of locations
@@ -32,7 +40,8 @@ type VirtualHosts map[string]*VirtualHost
 
 // Config : config
 type Config struct {
-	Hosts VirtualHosts
+	Hosts      VirtualHosts
+	Containers Containers
 }
 
 // NewConfig : create a new config
@@ -47,6 +56,11 @@ func (c *Config) Sort() {
 	for _, host := range c.Hosts {
 		host.Sort()
 	}
+}
+
+// AddContainer : add
+func (c *Config) AddContainer(con *Container) {
+	c.Containers = append(c.Containers, con)
 }
 
 // Sort : sort
@@ -102,7 +116,7 @@ func (ls Locations) Swap(i, j int) {
 
 // HtpasswdPath : returns htpasswd path
 func (l *Location) HtpasswdPath() string {
-	return fmt.Sprintf("/etc/nginx/htpasswd/%s", l.Name)
+	return fmt.Sprintf("/etc/nginx/htpasswd/%s", l.Container.Name)
 }
 
 // ExistsHtpasswd : existance of htpasswd file

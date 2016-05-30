@@ -25,12 +25,10 @@ server {
   access_log /var/log/nginx/access.log vhost;
   return 503;
 }
-{{range $key,$vhost := .Hosts}}
-{{range $index,$location := $vhost.Locations}}
-upstream {{$location.Name}} {
-  server {{$location.Address}}:{{$location.Port}};
+{{range $container := .Containers}}
+upstream {{$container.Name}} {
+  server {{$container.Address}}:{{$container.Port}};
 }
-{{end}}
 {{end}}
 {{range $key,$vhost := .Hosts}}
 {{if $vhost.ExistsCrtAndKey}}
@@ -60,7 +58,7 @@ server {
 {{end}}
 {{range $index,$location := $vhost.Locations}}
   location {{$location.Prefix}} {
-    proxy_pass http://{{$location.Name}};
+    proxy_pass http://{{$location.Container.Name}};
 {{if $location.ExistsHtpasswd}}
     auth_basic "Restricted {{$vhost.Name}}";
     auth_basic_user_file {{$location.HtpasswdPath}};
