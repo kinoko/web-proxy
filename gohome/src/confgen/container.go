@@ -74,7 +74,7 @@ func configFromContainers(client *docker.Client) (*Config, error) {
 			Address: inspect.NetworkSettings.IPAddress,
 		}
 		config.AddContainer(container)
-		for hostname := range strings.Split(hostnames, ";") {
+		for _, hostname := range strings.Split(hostnames, ";") {
 			vhost := config.Hosts.GetOrInit(hostname)
 			vhost.AddLocation(&Location{
 				Container: container,

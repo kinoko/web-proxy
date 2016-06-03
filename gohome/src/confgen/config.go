@@ -22,7 +22,7 @@ type Containers []*Container
 
 // Location : location
 type Location struct {
-	Container Container
+	Container *Container
 	Prefix    string
 }
 
