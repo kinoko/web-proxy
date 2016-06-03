@@ -1,9 +1,10 @@
 ---
 - name: ensure web proxy container is running
   become: yes
-  docker:
+  docker_container:
     image: "kinoko/web-proxy"
     name: web_proxy
+    state: started
     volumes:
       - "{{ docker_sock_path }}:/tmp/docker.sock:rw"
       - "{{ web_proxy_certs_path }}:/etc/nginx/certs:rw"
@@ -11,7 +12,5 @@
     ports:
       - "{{ web_proxy_listen_ip }}:80:80"
       - "{{ web_proxy_listen_ip }}:443:443"
-    state: reloaded
-    pull: always
+    pull: yes
     restart_policy: always
-    docker_api_version: "{{ docker_api_version }}"
