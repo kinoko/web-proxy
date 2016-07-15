@@ -8,27 +8,23 @@ extern crate lazy_static;
 extern crate quick_error;
 #[macro_use]
 extern crate rotor;
-extern crate rotor_tools;
+extern crate thread_scoped;
 extern crate nix;
 extern crate httparse;
 extern crate rustc_serialize as serialize;
+extern crate tempfile;
 
+#[macro_use]
+mod macros;
 mod logger;
 mod env;
 mod dispatcher;
 mod docker;
+mod writer;
+mod config;
 
 use std::process::exit;
 
-macro_rules! try_or_exit {
-    ($expr:expr, $($arg:tt)*) => (match $expr {
-        Ok(e) => e,
-        Err(ref e) => {
-            error!($($arg)*, e);
-            exit(1);
-        }
-    })
-}
 
 fn main() {
     logger::init().unwrap();

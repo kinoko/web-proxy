@@ -2,8 +2,9 @@
 use std;
 use std::io::{Write, Read};
 use std::time::Duration;
-use std::thread::{self, JoinHandle};
-use std::sync::Arc;
+use std::thread;
+use std::marker::PhantomData;
+use thread_scoped::{scoped, JoinGuard};
 use rotor::mio::unix::UnixStream;
 use rotor::{Machine, Response, Scope, EarlyScope, EventSet, Loop, Config, PollOpt};
 use rotor::void::{Void, unreachable};
@@ -13,27 +14,8 @@ use serialize::json::Json;
 use dispatcher::{Context, Result};
 use env;
 
-macro_rules! try_or_sleep {
-    ($expr:expr, $($arg:tt),*) => (match $expr {
-        Ok(e) => e,
-        Err(ref e) => {
-            error!($($arg)*, e);
-            thread::sleep(Duration::from_secs(10));
-            continue;
-        }
-    })
-}
-
-
-macro_rules! try_opt {
-    ($expr:expr) => (match $expr {
-        Some(v) => v,
-        None => { return; },
-    })
-}
-
-pub fn start(ctx: Arc<Context>) -> JoinHandle<()> {
-    thread::spawn(move || {
+pub fn start<'a>(ctx: &'a Context) -> JoinGuard<'a, ()> {
+    let main = move || {
         loop {
             let stream = try_or_sleep!(UnixStream::connect(env::docker_host()), "Failed to connect unix socket {}");
             info!("connected to the docker");
@@ -41,21 +23,51 @@ pub fn start(ctx: Arc<Context>) -> JoinHandle<()> {
             try_or_sleep!(loop_creator.add_machine_with(move |scope| {
                 Docker::new(stream, scope)
             }), "Failed while adding machine {}");
-            try_or_sleep!(loop_creator.run(ctx.clone()), "Failed while listening docker events {}");
+            try_or_sleep!(loop_creator.run(ctx), "Failed while listening docker events {}");
         }
-    })
+    };
+    unsafe { scoped(main) }
 }
 
-enum Docker {
-    Connecting(UnixStream),
-    Header(Buf<UnixStream>),
-    Stream(Buf<UnixStream>),
+
+
+enum Docker<'a> {
+    Connecting(DockerStream<'a>),
+    Header(DockerBufStream<'a>),
+    Stream(DockerBufStream<'a>),
+}
+struct DockerStream<'a> {
+    stream: UnixStream,
+    phantom: PhantomData<&'a u8>,
+}
+struct DockerBufStream<'a> {
+    stream: Buf<UnixStream>,
+    phantom: PhantomData<&'a u8>,
 }
 
-impl Docker {    
+impl<'a> DockerStream<'a> {
+    fn new(stream: UnixStream) -> Self {
+        DockerStream {
+            stream: stream,
+            phantom: PhantomData,
+        }
+    }
+}
+impl<'a> DockerBufStream<'a> {
+    fn new(stream: Buf<UnixStream>) -> Self {
+        DockerBufStream {
+            stream: stream,
+            phantom: PhantomData
+        }
+    }
+}
+
+use docker::Docker::*;
+
+impl<'a> Docker<'a> {
     fn new(stream: UnixStream, scope: &mut EarlyScope) -> Response<Self, <Self as Machine>::Seed> {
-        scope.register(&stream, EventSet::writable() | EventSet::readable(), PollOpt::level()).unwrap();
-        Response::ok(Docker::Connecting(stream))
+        try_rotor!(scope.register(&stream, EventSet::writable(), PollOpt::level()));
+        Response::ok(Connecting(DockerStream::new(stream)))
     }
 
     fn request(stream: &mut UnixStream) -> Result<()> {
@@ -66,87 +78,91 @@ impl Docker {
         Ok(())
     }
 
-    fn on_event(json: &Json, _scope: &mut Scope<<Self as Machine>::Context>) {
+    fn respond_with_ok(stream: &mut Buf<UnixStream>) -> Result<Option<usize>> {
+        let mut headers = [httparse::EMPTY_HEADER; 4];
+        let mut response = httparse::Response::new(&mut headers);
+        let buf = try!(stream.fill_buf());
+        if let httparse::Status::Complete(len) = try!(response.parse(buf)) {
+            if response.code == Some(200) {
+                return Ok(Some(len));
+            }
+        }
+        Ok(None)
+    }
+
+    fn on_connecting(mut stream: UnixStream, scope: &mut Scope<<Self as Machine>::Context>) -> Response<Self, <Self as Machine>::Seed> {
+        try_rotor!(Docker::request(&mut stream));
+        try_rotor!(scope.reregister(&stream, EventSet::readable(), PollOpt::level()));
+        Response::ok(Header(DockerBufStream::new(Buf::new(stream))))
+    }
+
+    fn on_header(mut stream: Buf<UnixStream>) -> Response<Self, <Self as Machine>::Seed> {
+        if let Some(len) = try_rotor!(Docker::respond_with_ok(&mut stream)) {
+            info!("Header is responsed with 200");
+            stream.consume(len);
+            Response::ok(Stream(DockerBufStream::new(stream)))
+        } else {
+            Response::ok(Header(DockerBufStream::new(stream)))
+        }                    
+    }
+
+    fn chunk(stream: &mut Buf<UnixStream>) -> Result<(usize, Option<Json>)> {
+        if let httparse::Status::Complete((len, size)) = try!(httparse::parse_chunk_size(stream.as_slice())) {
+            let size = size as usize;
+            if stream.pos >= len + size {
+                let mut len = len;
+                let mut json = None;
+                if size > 0 {
+                    let buf = try!(std::str::from_utf8(&stream.as_slice()[len..(len+size)]));
+                    len += size;
+                    json = Some(try!(Json::from_str(buf)));
+                }
+                return Ok((len, json));
+            }
+        }
+        Ok((0, None))
+    }
+
+    fn on_event(json: &Json, scope: &mut Scope<<Self as Machine>::Context>) {
         let status = try_opt!(json.find("status").and_then(Json::as_string));
         if status != "start" && status != "stop" && status != "die" {
             return;
         }
-        
+        info!("Container {}", status);
+        let mut wait = scope.changed.lock().unwrap();
+        *wait = *wait || true;
+        scope.lock.notify_all();
+    }
+
+    fn on_stream(mut stream: Buf<UnixStream>, scope: &mut Scope<<Self as Machine>::Context>) -> Response<Self, <Self as Machine>::Seed> {
+        try_rotor!(stream.fill_buf());
+        loop {
+            match try_rotor!(Docker::chunk(&mut stream)) {
+                (0, None) => { break; },
+                (len, None) => { stream.consume(len); },
+                (len, Some(ref json)) => {
+                    stream.consume(len);
+                    Docker::on_event(json, scope);
+                }
+            }
+        }
+        Response::ok(Stream(DockerBufStream::new(stream)))
     }
 }
 
-impl Machine for Docker {
-    type Context = Arc<Context>;
+impl<'a> Machine for Docker<'a> {
+    type Context = &'a Context;
     type Seed = Void;
 
     fn create(seed: Self::Seed, _scope: &mut Scope<Self::Context>) -> Response<Self, Void> {
         unreachable(seed);
     }
 
-    fn ready(self, events: EventSet, scope: &mut Scope<Self::Context>) -> Response<Self,  Self::Seed> {
+    fn ready(self, _events: EventSet, scope: &mut Scope<Self::Context>) -> Response<Self,  Self::Seed> {
         match self {
-            Docker::Connecting(mut stream) => {
-                if !events.is_writable() {
-                    return Response::ok(Docker::Connecting(stream));
-                }
-                Docker::request(&mut stream).unwrap();
-                Response::ok(Docker::Header(Buf::new(stream)))
-            },
-            Docker::Header(mut stream) => {
-                if !events.is_readable() {
-                    return Response::ok(Docker::Header(stream));
-                }
-                let parsed = {
-                    let mut headers = [httparse::EMPTY_HEADER; 4];
-                    let mut response = httparse::Response::new(&mut headers);
-                    let buf = stream.fill_buf().unwrap();
-                    match response.parse(buf).unwrap() {
-                        httparse::Status::Complete(len) => response.code.and_then(move |c| match c {
-                            200 => Some(len),
-                            _ => None,
-                        }),
-                        _ => None,
-                    }
-                };
-                    
-                if let Some(len) = parsed {
-                    info!("Header is responsed with 200");
-                    stream.consume(len);
-                    Response::ok(Docker::Stream(stream))
-                } else {
-                    Response::ok(Docker::Header(stream))
-                }
-            },
-            Docker::Stream(mut stream) => {
-                if !events.is_readable() {
-                    return Response::ok(Docker::Stream(stream));
-                }
-                stream.fill_buf().unwrap();
-                loop {
-                    let parsed = httparse::parse_chunk_size(stream.as_slice()).unwrap();
-                    if let httparse::Status::Complete((len, size)) = parsed {
-                        if size == 0 {
-                            stream.consume(len);
-                            continue;
-                        }
-                        let size = size as usize;
-                        if stream.pos < len + size {
-                            break
-                        }
-                        let parsed = {
-                            let buf = &stream.as_slice()[len..(len+size)];
-                            Json::from_str(std::str::from_utf8(buf).unwrap())
-                        };
-                        stream.consume(len + size);
-                        if let Ok(ref json) = parsed {
-                            Docker::on_event(json, scope);
-                        }
-                    } else {
-                        break;
-                    }
-                }
-                Response::ok(Docker::Stream(stream))
-            },
+            Docker::Connecting(d) => Docker::on_connecting(d.stream, scope),
+            Docker::Header(d) => Docker::on_header(d.stream),
+            Docker::Stream(d) => Docker::on_stream(d.stream, scope),
         }
     }
     
