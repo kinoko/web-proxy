@@ -56,6 +56,11 @@ server {
   listen 80;
   access_log /var/log/nginx/access.log vhost;
 {{end}}
+
+{{if $vhost.ExistsHostConf}}
+  include {{$vhost.HostConfPath}};
+{{end}}
+
 {{range $index,$location := $vhost.Locations}}
   location {{$location.Prefix}} {
     proxy_pass http://{{$location.Container.Name}};

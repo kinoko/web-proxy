@@ -7,8 +7,7 @@
     state: started
     volumes:
       - "{{ docker_sock_path }}:/tmp/docker.sock:rw"
-      - "{{ web_proxy_certs_path }}:/etc/nginx/certs:rw"
-      - "{{ web_proxy_htpasswd_path }}:/etc/nginx/htpasswd:rw"
+      - "{{ web_proxy_conf_path }}:/etc/nginx:rw"
     ports:
       - "{{ web_proxy_listen_ip }}:80:80"
       - "{{ web_proxy_listen_ip }}:443:443"

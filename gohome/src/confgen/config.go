@@ -88,6 +88,14 @@ func (v *VirtualHost) ExistsCrtAndKey() bool {
 	return Exists(v.CrtPath()) && Exists(v.KeyPath())
 }
 
+func (v * VirtualHost) HostConfPath() string {
+  return fmt.Sprintf("/etc/nginx/vhost.d/%s", v.Name)
+}
+
+func (v *VirtualHost) ExistsHostConf() bool {
+  return Exists(v.HostConfPath())
+}
+
 // GetOrInit : get a virtual host with hostname.
 func (vs VirtualHosts) GetOrInit(hostname string) *VirtualHost {
 	if vhost, ok := vs[hostname]; ok {

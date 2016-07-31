@@ -17,5 +17,8 @@ This case the proxied container can be accessed with `http://example.com/subloc`
 ## HTTPS Certification
 If you want proxied with https connection, you need to put `*.crt` and `*.key` files on the directry `/etc/nginx/certs`. The certification files are named by domain as `example.com.crt` or `example.com.key`.
 
+## Domain Specific nginx Configuration
+If you have additional configurations for some specific domain, putting a file on `/etc/nginx/vhost.d` with domain name, e.g., `example.com`, will automatically include the content of the file into the nginx configuration of the specified domain.
+
 ## Basic Authentication
 If you want to authenticate some location on some domain, you need to put a htpasswd file on the directry `/etc/nginx/htpasswd`. The file is named by the container name as `test-web-page`.
