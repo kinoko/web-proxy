@@ -19,6 +19,9 @@ proxy_set_header Connection $proxy_connection;
 proxy_set_header X-Real-IP $remote_addr;
 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
+
+proxy_set_header Proxy "";
+
 server {
   server_name _; # This is just an invalid value which will never trigger on a real hostname.
   listen 80;
