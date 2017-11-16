@@ -24,6 +24,8 @@ type Containers []*Container
 type Location struct {
 	Container *Container
 	Prefix    string
+  ExistHtpasswd bool
+  HtpasswdPath string
 }
 
 // Locations : list of locations
