@@ -82,7 +82,7 @@ func configFromContainers(client *docker.Client) (*Config, error) {
 				Container: container,
 				Prefix:    location,
         ExistHtpasswd: false,
-        HtpasswdPath: ""
+        HtpasswdPath: "",
 			})
       if restrictedLocation != "" && htpasswdPath != "" {
 			  vhost.AddLocation(&Location{
