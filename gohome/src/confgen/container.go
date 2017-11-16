@@ -87,7 +87,7 @@ func configFromContainers(client *docker.Client) (*Config, error) {
 				  Container: container,
 				  Prefix:    restrictedLocation,
           ExistHtpasswd: true,
-          HtpasswdPath: htpasswdPath
+          HtpasswdPath: htpasswdPath,
 			  })
       }
 		}
