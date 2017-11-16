@@ -65,6 +65,8 @@ func configFromContainers(client *docker.Client) (*Config, error) {
 		hostnames := env.Require("WEB_HOST")
 		location := env.Require("WEB_LOCATION")
 		port := env.Optional("WEB_PORT", "80")
+		restrictedLocation := env.Optional("RESTRICTED_LOCATION", nil)
+		htpasswdPath := env.Optional("HTPASSWD_PATH", nil)
 		if !env.Ok {
 			continue
 		}
@@ -80,6 +82,14 @@ func configFromContainers(client *docker.Client) (*Config, error) {
 				Container: container,
 				Prefix:    location,
 			})
+      if restrictedLocation != nil && htpasswdPath != nil {
+			  vhost.AddLocation(&Location{
+				  Container: container,
+				  Prefix:    restrictedLocation,
+          ExistHtpasswd: true,
+          HtpasswdPath: htpasswdPath
+			  })
+      }
 		}
 	}
 	config.Sort()
